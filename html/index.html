@@ -14,6 +14,12 @@
 <p>
     Total Connections = <label id="totalConnections"></label>
 </p>
+<p>
+    Button presses this client = <label id="totalButtonsPressed"></label>
+</p>
+<p>
+    Global button presses = <label id="globalButtonsPressed"></label>
+</p>
 
 <input type="button" value="status" id="b1" onclick=buttonclick()></input>
 
@@ -69,7 +75,7 @@
         CI.msgName = "ClientInput";
         CI.ButtonPressed = true;
 
-        
+
         // send it to the server
         connection.send(JSON.stringify(CI));
         console.log(JSON.stringify(CI))
