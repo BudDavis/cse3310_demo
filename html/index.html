@@ -2,28 +2,31 @@
     <meta charset="utf-8">
     CSE-3310 Demo
 </head>
+<p>
+    <label id="topMessage"></label>
+</p>
+<p>
+    ID = <label id="idConnection"></label>
+</p>
+<p>
+    Alive Connections = <label id="aliveConnections"></label>
+</p>
+<p>
+    Total Connections = <label id="totalConnections"></label>
+</p>
 
-<label id="topMessage"></label>
-<input type="button" value="?" id="b1" onclick=buttonclick(0)></input>
-
+<input type="button" value="status" id="b1" onclick=buttonclick()></input>
 
 <script>
-    var idx = -1;
-    var gameid = -1;
-    class UserEvent {
-        Button = -1;
-        PlayerIdx = 0;
-        GameId = 0;
-    }
+
     var connection = null;
-
-
     var serverUrl = "ws://" + window.location.hostname + ":" + (parseInt(location.port) + 100);
 
     connection = new WebSocket(serverUrl);
 
     connection.onopen = function (evt) {
         console.log("open");
+        document.getElementById("topMessage").innerHTML = "Server Online"
     }
 
     connection.onclose = function (evt) {
@@ -31,7 +34,7 @@
         document.getElementById("topMessage").innerHTML = "Server Offline"
     }
 
-   
+
     connection.onmessage = function (evt) {
         var msg;
         msg = evt.data;
@@ -39,39 +42,36 @@
         console.log("Message received: " + msg);
         const obj = JSON.parse(msg);
 
-        if ('YouAre' in obj) {
-            if (obj.YouAre == "XPLAYER") {
-                idx = 0;
-            }
-            else {
-                idx = 1;
-            }
-
-            gameid = obj.GameId;
-        }
-        else if ('CurrentTurn' in obj) {
-            // show statistics to everyone
-            var t = obj.Stats;
-            if (t) {
-                document.getElementById("timeMsg").innerHTML = "elapsed time " + t.RunningTime;
-                document.getElementById("statMsg").innerHTML =
-                    " in progress " + t.GamesInProgress + " XWin " + t.XWins + " OWin " + t.OWins +
-                    " Draw " + t.Draws + " Total " + t.TotalGames;
-            } 
-                document.getElementById("topMessage").innerHTML = obj.Msg[idx];
+        // check for a message in the format that we require
+        if ("msgName" in obj) {
+            switch (obj.msgName) {
+                case "ConnectionID":
+                    document.getElementById("idConnection").innerHTML = obj.connID;
+                    break;
+                case "GlobalState":
+                    document.getElementById("aliveConnections").innerHTML = obj.numConnectionsAlive;
+                    document.getElementById("totalConnections").innerHTML = obj.numConnectionsTotal;
+                    break;
+                default:
+                    console.log("msg not handled");
+                    break;
             }
         }
     }
 
-    function buttonclick(i) {
-        U = new UserEvent();
-        U.Button = i;
-        if (idx == 0)
-            U.PlayerIdx = "XPLAYER";
-        else
-            U.PlayerIdx = "OPLAYER";
-        U.GameId = gameid;
-        connection.send(JSON.stringify(U));
-        console.log(JSON.stringify(U))
+    function buttonclick() {
+        class ClientInput {
+            msgName;
+            ButtonPressed;
+        }
+
+        CI = new ClientInput();
+        CI.msgName = "ClientInput";
+        CI.ButtonPressed = true;
+
+        
+        // send it to the server
+        connection.send(JSON.stringify(CI));
+        console.log(JSON.stringify(CI))
     }
 </script>

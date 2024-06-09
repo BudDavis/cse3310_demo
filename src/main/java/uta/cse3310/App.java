@@ -62,6 +62,41 @@ import com.google.gson.GsonBuilder;
 
 public class App extends WebSocketServer {
 
+  public class GlobalState {
+    String msgName = "GlobalState";
+    Integer numConnectionsAlive;
+    Integer numConnectionsTotal;
+
+    GlobalState() {
+      numConnectionsAlive = 0;
+      numConnectionsTotal = 0;
+    }
+  }
+
+  GlobalState GS = new GlobalState();
+
+  public class ConnectionState {
+    String msgName = "ConnectionState";
+    Integer buttonsProcessed;
+  }
+
+  public class ClientInput {
+    String msgName = "ClientInput";
+    Boolean ButtonPressed;
+
+  }
+
+  public class ConnectionID {
+    String msgName = "ConnectionID";
+    Integer connID;
+
+    ConnectionID(Integer ID) {
+      connID = ID;
+    }
+  }
+
+  Integer conID;
+
   public App(int port) {
     super(new InetSocketAddress(port));
   }
@@ -79,28 +114,64 @@ public class App extends WebSocketServer {
 
     System.out.println(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " connected");
 
-    // conn.setAttachment(G);
+    ConnectionID ID = new ConnectionID(conID);
+    conID++;
 
-    // String jsonString = gson.toJson(E);
+    conn.setAttachment(ID);
+
+    // Tell the client it's client ID
+    Gson gson = new Gson();
+    String jsonString = gson.toJson(ID);
+    conn.send(jsonString);
+
+    // Update global counters
+    GS.numConnectionsAlive++;
+    GS.numConnectionsTotal++;
+
+    // Send this out to all clients
+    jsonString = gson.toJson(GS);
+    broadcast(jsonString);
 
   }
 
   @Override
   public void onClose(WebSocket conn, int code, String reason, boolean remote) {
     System.out.println(conn + " has closed");
-    // Retrieve the game tied to the websocket connection
-    // Game G = conn.getAttachment();
-    // G = null;
+
+    ConnectionID C = conn.getAttachment();
+    C = null;
   }
 
   @Override
   public void onMessage(WebSocket conn, String message) {
+    System.out.println(conn + ": " + message);
+
+    // Where did this message come from?
+    // Ask for the class that was given to the websockets lib when the connection
+    // opened.
+    ConnectionID C = conn.getAttachment();
+    System.out.println("the connection id is " + C.connID);
+
+    // This received message is a json formatted string.
+    // All of the defined messages have a field called 'msgName'
+    if (message.contains("msgName")) {
+      if (message.contains("ClientInput")) {
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        ClientInput CI = gson.fromJson(message, ClientInput.class);
+
+      }
+
+    } else {
+      System.out.println("Not a valid message.");
+    }
 
   }
 
   @Override
   public void onMessage(WebSocket conn, ByteBuffer message) {
     System.out.println(conn + ": " + message);
+
   }
 
   @Override
@@ -115,6 +186,7 @@ public class App extends WebSocketServer {
   @Override
   public void onStart() {
     setConnectionLostTimeout(0);
+    conID = 1;
 
   }
 
