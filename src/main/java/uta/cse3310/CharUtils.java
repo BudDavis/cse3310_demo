@@ -7,6 +7,8 @@ package uta.cse3310;
  */
 public class CharUtils
     
+
+
 {
       Character toUpper(Character C){
         return 'A';
