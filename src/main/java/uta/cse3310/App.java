@@ -101,7 +101,7 @@ public class App extends WebSocketServer {
 
     ConnectionID(Integer ID) {
       connID = ID;
-      connectionElapsedTime++;
+      connectionElapsedTime = 0;
     }
 
     void update() {
@@ -110,6 +110,7 @@ public class App extends WebSocketServer {
   }
 
   Integer conID;
+  Vector<WebSocket> connectionList = new Vector<WebSocket>();
 
   public App(int port) {
     super(new InetSocketAddress(port));
@@ -132,6 +133,8 @@ public class App extends WebSocketServer {
     conID++;
 
     conn.setAttachment(ID);
+
+    connectionList.add(conn);
 
     // Tell the client it's client ID
     Gson gson = new Gson();
@@ -158,9 +161,21 @@ public class App extends WebSocketServer {
   public class upDate extends TimerTask {
 
     public void run() {
+      System.out.println("in run");
+      GS.update();
+      // Send this out to all clients
+      Gson gson = new Gson();
+      String jsonString = gson.toJson(GS);
+      broadcast(jsonString);
+
+      // And now for each client
+      for (WebSocket C : connectionList) {
+        ConnectionID CID = C.getAttachment();
+        jsonString = gson.toJson(CID);
+        C.send(jsonString);
+      }
 
     }
-
   }
 
   @Override
@@ -168,6 +183,8 @@ public class App extends WebSocketServer {
     System.out.println(conn + " has closed");
 
     ConnectionID C = conn.getAttachment();
+    connectionList.removeElement(conn);
+
     C = null;
 
     // if this is the last client, stop the one second timer
