@@ -20,6 +20,12 @@
 <p>
     Global button presses = <label id="globalButtonsPressed"></label>
 </p>
+<p>
+    Global timer = <label id="globalTimer"></label>
+</p>
+<p>
+    Connection timer = <label id="connectionElapsedTime"></label>
+</p>
 
 <input type="button" value="status" id="b1" onclick=buttonclick()></input>
 
@@ -53,10 +59,12 @@
             switch (obj.msgName) {
                 case "ConnectionID":
                     document.getElementById("idConnection").innerHTML = obj.connID;
+                    document.getElementById("connectionElapsedTime").innerHTML = obj.connectionElapsedTime;
                     break;
                 case "GlobalState":
                     document.getElementById("aliveConnections").innerHTML = obj.numConnectionsAlive;
                     document.getElementById("totalConnections").innerHTML = obj.numConnectionsTotal;
+                    document.getElementById("globalTimer").innerHTML = obj.globalElapsedTime;
                     break;
                 default:
                     console.log("msg not handled");

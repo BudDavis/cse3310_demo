@@ -171,6 +171,7 @@ public class App extends WebSocketServer {
       // And now for each client
       for (WebSocket C : connectionList) {
         ConnectionID CID = C.getAttachment();
+        CID.update();
         jsonString = gson.toJson(CID);
         C.send(jsonString);
       }
