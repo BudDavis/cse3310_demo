@@ -10,7 +10,7 @@ public class CharUtils
 
 
 {
-      Character toUpper(Character C){
+      static Character toUpper(Character C){
         return 'A';
       }
 }

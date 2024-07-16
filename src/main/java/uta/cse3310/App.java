@@ -66,14 +66,22 @@ public class App extends WebSocketServer {
     String msgName = "GlobalState";
     Integer numConnectionsAlive;
     Integer numConnectionsTotal;
+    Integer globalElapsedTime;
 
     GlobalState() {
       numConnectionsAlive = 0;
       numConnectionsTotal = 0;
+      globalElapsedTime = 0;
+    }
+
+    void update() {
+      // This function is expected to be called once a second
+      globalElapsedTime++;
     }
   }
 
   GlobalState GS = new GlobalState();
+  java.util.Timer timer = null;
 
   public class ConnectionState {
     String msgName = "ConnectionState";
@@ -89,9 +97,15 @@ public class App extends WebSocketServer {
   public class ConnectionID {
     String msgName = "ConnectionID";
     Integer connID;
+    Integer connectionElapsedTime;
 
     ConnectionID(Integer ID) {
       connID = ID;
+      connectionElapsedTime++;
+    }
+
+    void update() {
+      connectionElapsedTime++;
     }
   }
 
@@ -132,6 +146,21 @@ public class App extends WebSocketServer {
     jsonString = gson.toJson(GS);
     broadcast(jsonString);
 
+    // if this is the first client, start the one second timer
+    if (GS.numConnectionsAlive == 1) {
+      timer = new java.util.Timer();
+      timer.scheduleAtFixedRate(new upDate(), 0, 1000);
+      System.out.println("starting timer.");
+    }
+
+  }
+
+  public class upDate extends TimerTask {
+
+    public void run() {
+
+    }
+
   }
 
   @Override
@@ -140,6 +169,13 @@ public class App extends WebSocketServer {
 
     ConnectionID C = conn.getAttachment();
     C = null;
+
+    // if this is the last client, stop the one second timer
+    if (GS.numConnectionsAlive == 0) {
+      timer.cancel();
+      System.out.println("stopping timer.");
+    }
+
   }
 
   @Override
